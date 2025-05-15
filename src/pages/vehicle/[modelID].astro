@@ -1,0 +1,330 @@
+---
+import mongoose from "mongoose";
+import VehicleModel from '@/models/Vehicle';
+export const prerender = false;
+import Layout from '../../layouts/Layout.astro';
+
+// Connexion à MongoDB si ce n'est pas déjà fait ailleurs
+if (!mongoose.connection.readyState) {
+  await mongoose.connect('mongodb+srv://admin:VVFekrlUAsR9N1sm@cluster0.xa3z5.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0');
+}
+
+const { modelID } = Astro.params;
+
+// Récupérer les données du véhicule
+let vehicle = null;
+try {
+  // Si modelID est un ObjectId
+  if (mongoose.Types.ObjectId.isValid(modelID)) {
+    vehicle = await VehicleModel.findById(modelID);
+  } else {
+    // Sinon, supposons que c'est le nom du modèle
+    vehicle = await VehicleModel.findOne({ model: modelID });
+  }
+} catch (error) {
+  console.error('Erreur lors de la récupération du véhicule:', error);
+}
+
+const similarVehicles = vehicle ? await VehicleModel.find({
+  make: vehicle.make,
+  model: { $ne: vehicle.model },
+  vehicleType: vehicle.vehicleType
+}).limit(3) : [];
+
+// Image principale par défaut si aucune n'est disponible
+const mainImage = vehicle?.images?.[0] || '/images/default-vehicle.jpg';
+
+---
+<Layout>
+  {vehicle ? (
+    <div class="bg-gray-50 min-h-screen">
+      <!-- Hero section -->
+      <div class="relative h-96 w-full overflow-hidden">
+        <img src={mainImage} alt={`${vehicle.make} ${vehicle.model}`} class="w-full h-full object-cover" />
+        <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
+          <div class="container mx-auto px-4 pb-8">
+            <span class="inline-block bg-blue-600 text-white px-3 py-1 text-sm font-medium rounded-md mb-3">
+              {vehicle.vehicleType.charAt(0).toUpperCase() + vehicle.vehicleType.slice(1)}
+            </span>
+            <h1 class="text-4xl md:text-5xl font-bold text-white">
+              {vehicle.make} {vehicle.model} {vehicle.year}
+            </h1>
+          </div>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="container mx-auto px-4 py-8">
+        <div class="flex flex-col lg:flex-row gap-8">
+          <!-- Main content -->
+          <div class="lg:w-2/3">
+            <!-- Tabs navigation -->
+            <div class="border-b border-gray-200 mb-6">
+              <div class="flex space-x-6">
+                <button class="py-4 border-b-2 border-blue-600 font-medium text-blue-600">Vue d'ensemble</button>
+                <button class="py-4 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700">Spécifications</button>
+                <button class="py-4 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700">Entretien</button>
+                <button class="py-4 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700">Problèmes courants</button>
+              </div>
+            </div>
+
+            <!-- Vehicle Description -->
+            <div class="prose max-w-none mb-8">
+              <p class="text-gray-600 text-lg">
+                Le {vehicle.make} {vehicle.model} {vehicle.year} est un véhicule de type {vehicle.vehicleType} 
+                combinant performance, confort et technologie moderne. Disponible en plusieurs variantes, ce modèle
+                s'adapte à différents besoins et préférences.
+              </p>
+            </div>
+
+            <!-- Variants -->
+            {vehicle.variants && vehicle.variants.length > 0 && (
+              <div class="mb-10">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Variantes disponibles</h2>
+                <div class="grid md:grid-cols-2 gap-4">
+                  {vehicle.variants.map(variant => (
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                      <h3 class="text-xl font-semibold text-gray-800 mb-2">{variant.name}</h3>
+                      <div class="space-y-2 text-gray-600">
+                        <div class="flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                          <span>Moteur: {variant.engineType}</span>
+                        </div>
+                        <div class="flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                          </svg>
+                          <span>Finition: {variant.trimLevel}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <!-- Systems -->
+            {vehicle.systems && vehicle.systems.length > 0 && (
+              <div class="mb-10">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Systèmes du véhicule</h2>
+                <div class="space-y-4">
+                  {vehicle.systems.map((system, index) => (
+                    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                      <div class="px-6 py-4 flex justify-between items-center cursor-pointer">
+                        <h3 class="text-lg font-medium text-gray-800">{system.name}</h3>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                      <div class="hidden px-6 py-4 bg-gray-50 border-t border-gray-100">
+                        <h4 class="font-medium text-gray-700 mb-2">Composants :</h4>
+                        <ul class="list-disc pl-5 text-gray-600">
+                          {system.components && system.components.map(component => (
+                            <li>{component.name}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <!-- Maintenance Schedule -->
+            {vehicle.maintenanceSchedules && vehicle.maintenanceSchedules.length > 0 && (
+              <div class="mb-10">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Programme d'entretien</h2>
+                <div class="overflow-hidden rounded-lg border border-gray-200">
+                  <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                      <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Intervalle</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tâches</th>
+                      </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                      {vehicle.maintenanceSchedules.map(schedule => (
+                        <tr>
+                          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">{schedule.interval}</td>
+                          <td class="px-6 py-4 text-sm text-gray-600">
+                            <ul class="list-disc pl-5 space-y-1">
+                              {schedule.tasks.map(task => (
+                                <li>{task}</li>
+                              ))}
+                            </ul>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            <!-- Common Issues -->
+            {vehicle.commonIssues && vehicle.commonIssues.length > 0 && (
+              <div class="mb-10">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Problèmes courants</h2>
+                <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+                  <ul class="divide-y divide-gray-200">
+                    {vehicle.commonIssues.map(issue => (
+                      <li class="px-6 py-4 flex items-start">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-amber-500 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span class="text-gray-700">{issue}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            <!-- Image Gallery -->
+            {vehicle.images && vehicle.images.length > 0 && (
+              <div class="mb-10">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Galerie</h2>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {vehicle.images.map(image => (
+                    <div class="aspect-w-4 aspect-h-3 rounded-lg overflow-hidden">
+                      <img src={image} alt={`${vehicle.make} ${vehicle.model}`} class="w-full h-full object-cover transform hover:scale-105 transition-transform duration-300" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <!-- Sidebar -->
+          <div class="lg:w-1/3">
+            <!-- Vehicle Info Card -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden mb-6">
+              <div class="p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Informations principales</h2>
+                <ul class="space-y-3">
+                  <li class="flex justify-between">
+                    <span class="text-gray-600">Marque</span>
+                    <span class="font-medium text-gray-800">{vehicle.make}</span>
+                  </li>
+                  <li class="flex justify-between">
+                    <span class="text-gray-600">Modèle</span>
+                    <span class="font-medium text-gray-800">{vehicle.model}</span>
+                  </li>
+                  <li class="flex justify-between">
+                    <span class="text-gray-600">Année</span>
+                    <span class="font-medium text-gray-800">{vehicle.year}</span>
+                  </li>
+                  <li class="flex justify-between">
+                    <span class="text-gray-600">Type</span>
+                    <span class="font-medium text-gray-800">{vehicle.vehicleType}</span>
+                  </li>
+                  <li class="flex justify-between">
+                    <span class="text-gray-600">Nombre de variantes</span>
+                    <span class="font-medium text-gray-800">{vehicle.variants?.length || 0}</span>
+                  </li>
+                </ul>
+              </div>
+              <div class="px-6 py-4 bg-gray-50 border-t border-gray-100">
+                <button class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md font-medium transition-colors">
+                  Télécharger la fiche technique
+                </button>
+              </div>
+            </div>
+
+            <!-- Similar Vehicles -->
+            {similarVehicles.length > 0 && (
+              <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden mb-6">
+                <div class="p-6">
+                  <h2 class="text-xl font-bold text-gray-800 mb-4">Véhicules similaires</h2>
+                  <div class="space-y-4">
+                    {similarVehicles.map(similarVehicle => (
+                      <a href={`/vehicles/${similarVehicle._id}`} class="block group">
+                        <div class="flex items-center">
+                          <div class="w-16 h-16 bg-gray-100 rounded-md overflow-hidden flex-shrink-0">
+                            <img 
+                              src={similarVehicle.images?.[0] || '/images/default-vehicle-thumbnail.jpg'} 
+                              alt={`${similarVehicle.make} ${similarVehicle.model}`}
+                              class="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div class="ml-4">
+                            <h3 class="text-gray-800 font-medium group-hover:text-blue-600 transition-colors">
+                              {similarVehicle.make} {similarVehicle.model} {similarVehicle.year}
+                            </h3>
+                            <p class="text-sm text-gray-500">{similarVehicle.vehicleType}</p>
+                          </div>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <!-- Contact Card -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+              <div class="p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Besoin d'aide ?</h2>
+                <p class="text-gray-600 mb-6">
+                  Nos experts sont disponibles pour répondre à toutes vos questions concernant ce véhicule.
+                </p>
+                <div class="space-y-3">
+                  <button class="w-full flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md font-medium transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                    Contacter un conseiller
+                  </button>
+                  <button class="w-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-4 rounded-md font-medium transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                    </svg>
+                    Chat en direct
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  ) : (
+    <div class="min-h-screen flex items-center justify-center bg-gray-50">
+      <div class="text-center p-8 max-w-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">Véhicule non trouvé</h1>
+        <p class="text-lg text-gray-600 mb-6">
+          Aucun véhicule trouvé correspondant à l'identifiant: {modelID}
+        </p>
+        <a href="/vehicles" class="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md font-medium transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Retour à la liste des véhicules
+        </a>
+      </div>
+    </div>
+  )}
+
+  <script>
+    // JavaScript pour gérer les accordéons des systèmes
+    document.addEventListener('DOMContentLoaded', () => {
+      const systemHeaders = document.querySelectorAll('.bg-white.rounded-lg.border.border-gray-200.overflow-hidden > div:first-child');
+      
+      systemHeaders.forEach(header => {
+        header.addEventListener('click', () => {
+          const content = header.nextElementSibling;
+          content.classList.toggle('hidden');
+          
+          // Rotate arrow icon
+          const arrow = header.querySelector('svg');
+          arrow.classList.toggle('rotate-180');
+        });
+      });
+    });
+  </script>
+</Layout>

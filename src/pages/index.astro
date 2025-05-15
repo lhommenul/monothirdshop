@@ -1,11 +1,412 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
+import mongoose from "mongoose";
+import VehicleModel from '../models/Vehicle';
+export const prerender = false;
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+// Connexion à MongoDB si nécessaire
+if (!mongoose.connection.readyState) {
+  await mongoose.connect(import.meta.env.MONGODB_URI);
+}
+
+// Récupérer les statistiques
+const stats = {
+  totalVehicles: await VehicleModel.countDocuments(),
+  totalMakes: (await VehicleModel.getAllMakes()).length,
+  // Nombre de véhicules par type
+  vehicleTypes: {
+    electric: await VehicleModel.countDocuments({ vehicleType: 'electric' }),
+    combustion: await VehicleModel.countDocuments({ vehicleType: 'combustion' }),
+    hybrid: await VehicleModel.countDocuments({ vehicleType: 'hybrid' })
+  },
+  // Marques les plus populaires (top 5)
+  topMakes: await VehicleModel.aggregate([
+    { $group: { _id: "$make", count: { $sum: 1 } } },
+    { $sort: { count: -1 } },
+    { $limit: 5 }
+  ])
+};
+
+// Récupérer toutes les marques pour le filtre
+const allMakes = await VehicleModel.getAllMakes();
+
+// Récupérer les véhicules en vedette
+const featuredVehicles = await VehicleModel.find()
+  .sort({ createdAt: -1 })
+  .limit(6);
 ---
 
 <Layout>
-	<Welcome />
+  <!-- Hero Section -->
+  <section class="relative bg-gradient-to-r from-blue-600 to-indigo-800 text-white overflow-hidden">
+    <!-- Motif de fond -->
+    <div class="absolute inset-0 opacity-10">
+      <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <defs>
+          <pattern id="grid" width="8" height="8" patternUnits="userSpaceOnUse">
+            <path d="M 8 0 L 0 0 0 8" fill="none" stroke="currentColor" stroke-width="0.5" />
+          </pattern>
+        </defs>
+        <rect width="100" height="100" fill="url(#grid)" />
+      </svg>
+    </div>
+    
+    <div class="container mx-auto px-4 py-20 md:py-32 relative z-10">
+      <div class="max-w-3xl">
+        <h1 class="text-4xl md:text-6xl font-extrabold mb-6">
+          Trouvez le véhicule idéal pour vos besoins
+        </h1>
+        <p class="text-xl md:text-2xl opacity-90 mb-8">
+          ThirdShop vous offre l'accès à la plus grande base de données de véhicules avec spécifications techniques, variantes et guides d'entretien.
+        </p>
+        <div class="flex flex-wrap gap-4">
+          <a href="#search" class="bg-white text-blue-700 hover:bg-blue-50 px-6 py-3 rounded-lg font-semibold transition-colors shadow-lg">
+            Rechercher un véhicule
+          </a>
+          <a href="/about" class="bg-transparent border-2 border-white hover:bg-white/10 px-6 py-3 rounded-lg font-semibold transition-colors">
+            En savoir plus
+          </a>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Image décorative -->
+    <div class="hidden lg:block absolute right-0 bottom-0 w-2/5 h-full">
+      <div class="absolute inset-0 bg-gradient-to-l from-transparent to-blue-700"></div>
+      <div class="relative w-full h-full">
+        <img 
+          src="/images/hero-car.webp" 
+          alt="Véhicule moderne" 
+          class="w-full h-full object-cover mix-blend-overlay opacity-50"
+        />
+      </div>
+    </div>
+  </section>
+
+  <!-- Section de recherche -->
+  <section id="search" class="py-12 md:py-20 bg-white">
+    <div class="container mx-auto px-4">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Trouvez votre véhicule</h2>
+        <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+          Utilisez notre moteur de recherche avancé pour trouver rapidement le véhicule que vous recherchez.
+        </p>
+      </div>
+      
+      <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 md:p-8">
+        <form class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label for="make" class="block text-sm font-medium text-gray-700 mb-1">Marque</label>
+              <select id="make" name="make" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                <option value="">Toutes les marques</option>
+                {allMakes.map(make => (
+                  <option value={make}>{make}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div>
+              <label for="model" class="block text-sm font-medium text-gray-700 mb-1">Modèle</label>
+              <select id="model" name="model" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" disabled>
+                <option value="">Sélectionnez d'abord une marque</option>
+              </select>
+            </div>
+            
+            <div>
+              <label for="year" class="block text-sm font-medium text-gray-700 mb-1">Année</label>
+              <select id="year" name="year" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" disabled>
+                <option value="">Sélectionnez d'abord un modèle</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label for="vehicleType" class="block text-sm font-medium text-gray-700 mb-1">Type de véhicule</label>
+              <select id="vehicleType" name="vehicleType" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                <option value="">Tous les types</option>
+                <option value="electric">Électrique</option>
+                <option value="combustion">Combustion</option>
+                <option value="hybrid">Hybride</option>
+              </select>
+            </div>
+            
+            <div class="col-span-2">
+              <label for="searchTerm" class="block text-sm font-medium text-gray-700 mb-1">Recherche par mot-clé</label>
+              <input 
+                type="text" 
+                id="searchTerm" 
+                name="searchTerm" 
+                placeholder="Ex: SUV, Berline, 4x4, Familiale..." 
+                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+          
+          <div class="flex justify-center">
+            <button type="submit" class="inline-flex items-center px-6 py-3 border border-transparent rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 font-medium text-lg transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              Rechercher
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Section de statistiques -->
+  <section class="py-12 md:py-20 bg-gray-50">
+    <div class="container mx-auto px-4">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Notre base de données</h2>
+        <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+          Découvrez l'étendue de notre collection de véhicules et de spécifications techniques.
+        </p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Total de véhicules -->
+        <div class="bg-white rounded-xl shadow-sm p-6 text-center hover:shadow-md transition-shadow">
+          <div class="flex justify-center mb-4">
+            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+          </div>
+          <h3 class="text-4xl font-bold text-gray-800 mb-2">{stats.totalVehicles.toLocaleString()}</h3>
+          <p class="text-gray-600">Véhicules dans notre base</p>
+        </div>
+        
+        <!-- Marques -->
+        <div class="bg-white rounded-xl shadow-sm p-6 text-center hover:shadow-md transition-shadow">
+          <div class="flex justify-center mb-4">
+            <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+          </div>
+          <h3 class="text-4xl font-bold text-gray-800 mb-2">{stats.totalMakes.toLocaleString()}</h3>
+          <p class="text-gray-600">Marques disponibles</p>
+        </div>
+        
+        <!-- Véhicules électriques -->
+        <div class="bg-white rounded-xl shadow-sm p-6 text-center hover:shadow-md transition-shadow">
+          <div class="flex justify-center mb-4">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+          </div>
+          <h3 class="text-4xl font-bold text-gray-800 mb-2">{stats.vehicleTypes.electric.toLocaleString()}</h3>
+          <p class="text-gray-600">Véhicules électriques</p>
+        </div>
+        
+        <!-- Variantes disponibles -->
+        <div class="bg-white rounded-xl shadow-sm p-6 text-center hover:shadow-md transition-shadow">
+          <div class="flex justify-center mb-4">
+            <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              </svg>
+            </div>
+          </div>
+          <h3 class="text-4xl font-bold text-gray-800 mb-2">{(stats.vehicleTypes.hybrid + stats.vehicleTypes.combustion).toLocaleString()}</h3>
+          <p class="text-gray-600">Véhicules hybrides et combustion</p>
+        </div>
+      </div>
+      
+    </div>
+  </section>
+  
+  <!-- Véhicules en vedette -->
+  <section class="py-12 md:py-20 bg-white">
+    <div class="container mx-auto px-4">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Véhicules récemment ajoutés</h2>
+        <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+          Découvrez les derniers véhicules ajoutés à notre base de données.
+        </p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {featuredVehicles.map(vehicle => (
+          <a href={`/vehicle/${vehicle._id}`} class="group">
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+              <div class="aspect-w-16 aspect-h-9 bg-gray-100">
+                <img 
+                  src={vehicle.images?.[0] || '/images/default-vehicle.jpg'} 
+                  alt={`${vehicle.make} ${vehicle.model}`}
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+              </div>
+              <div class="p-6">
+                <div class="flex justify-between items-start mb-2">
+                  <h3 class="text-xl font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
+                    {vehicle.make} {vehicle.model}
+                  </h3>
+                  <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full font-medium">
+                    {vehicle.year}
+                  </span>
+                </div>
+                <p class="text-gray-600 mb-4">
+                  Type: {vehicle.vehicleType.charAt(0).toUpperCase() + vehicle.vehicleType.slice(1)}
+                </p>
+                {vehicle.variants && vehicle.variants.length > 0 && (
+                  <div class="flex flex-wrap gap-2 mb-4">
+                    {vehicle.variants.map((variant, index) => index < 3 && (
+                      <span class="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full">
+                        {variant.name}
+                      </span>
+                    ))}
+                    {vehicle.variants.length > 3 && (
+                      <span class="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full">
+                        +{vehicle.variants.length - 3} autres
+                      </span>
+                    )}
+                  </div>
+                )}
+                <div class="mt-4 flex justify-between items-center">
+                  <span class="text-sm text-gray-500">
+                    {new Date(vehicle.createdAt).toLocaleDateString('fr-FR', {
+                      day: 'numeric',
+                      month: 'long', 
+                      year: 'numeric'
+                    })}
+                  </span>
+                  <span class="text-blue-600 text-sm font-medium group-hover:underline">Voir les détails</span>
+                </div>
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+      
+      <div class="mt-12 text-center">
+        <a href="/vehicles" class="inline-flex items-center px-6 py-3 border border-transparent rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 font-medium transition-colors">
+          Voir tous les véhicules
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Fonctionnalités -->
+  <section class="py-12 md:py-20 bg-gray-50">
+    <div class="container mx-auto px-4">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Pourquoi choisir ThirdShop ?</h2>
+        <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+          Nous offrons une expérience complète pour tous les passionnés et professionnels de l'automobile.
+        </p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Caractéristique 1 -->
+        <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
+          <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-800 mb-3">Base de données complète</h3>
+          <p class="text-gray-600">
+            Accédez à des informations détaillées sur des milliers de véhicules, incluant caractéristiques techniques, variantes et options.
+          </p>
+        </div>
+        
+        <!-- Caractéristique 2 -->
+        <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
+          <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-800 mb-3">Guides d'entretien</h3>
+          <p class="text-gray-600">
+            Consultez les programmes d'entretien détaillés pour chaque véhicule, avec les interventions recommandées et leur fréquence.
+          </p>
+        </div>
+        
+        <!-- Caractéristique 3 -->
+        <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
+          <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-800 mb-3">Problèmes connus</h3>
+          <p class="text-gray-600">
+            Identifiez facilement les problèmes courants pour chaque modèle, afin d'anticiper les réparations et les coûts d'entretien.
+          </p>
+        </div>
+        
+        <!-- Caractéristique 4 -->
+        <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
+          <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-800 mb-3">Comparaison intuitive</h3>
+          <p class="text-gray-600">
+            Comparez facilement différents modèles ou différentes variantes pour faire le meilleur choix selon vos besoins.
+          </p>
+        </div>
+        
+        <!-- Caractéristique 5 -->
+        <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
+          <div class="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-pink-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-800 mb-3">Ressources téléchargeables</h3>
+          <p class="text-gray-600">
+            Téléchargez des fiches techniques, des guides d'entretien et d'autres ressources utiles pour votre véhicule.
+          </p>
+        </div>
+        
+        <!-- Caractéristique 6 -->
+        <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
+          <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-800 mb-3">Communauté active</h3>
+          <p class="text-gray-600">
+            Participez à nos forums et échangez avec d'autres propriétaires pour partager expériences et conseils.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Appel à l'action -->
+  <section class="py-12 md:py-20 bg-blue-600 text-white">
+    <div class="container mx-auto px-4 text-center">
+      <h2 class="text-3xl md:text-4xl font-bold mb-6">Prêt à explorer notre base de données ?</h2>
+      <p class="text-xl opacity-90 max-w-2xl mx-auto mb-8">
+        Rejoignez des milliers d'utilisateurs qui font confiance à ThirdShop pour leurs recherches automobiles.
+      </p>
+      <div class="flex flex-wrap justify-center gap-4">
+        <a href="/signup" class="bg-white text-blue-700 hover:bg-blue-50 px-6 py-3 rounded-lg font-semibold transition-colors shadow-lg">
+          Créer un compte gratuitement
+        </a>
+        <a href="/vehicles" class="bg-transparent border-2 border-white hover:bg-white/10 px-6 py-3 rounded-lg font-semibold transition-colors">
+          Parcourir les véhicules
+        </a>
+      </div>
+    </div>
+  </section>
+
 </Layout>
