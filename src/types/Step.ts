@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { MediaAnnotation } from './index';
+import type { MediaAnnotation } from './index';
 
 export interface StepImage {
   url: string;

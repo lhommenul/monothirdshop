@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { VehicleType } from './index';
+import type { VehicleType } from './index';
 
 export interface VehicleVariant {
   name: string;

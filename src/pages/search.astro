@@ -1,0 +1,350 @@
+---
+import Layout from '@/layouts/Layout.astro';
+
+// Récupérer le paramètre de recherche depuis l'URL
+const { searchQuery } = Astro.url.searchParams;
+const initialQuery = searchQuery || '';
+
+// Dans un cas réel, vous appelleriez votre API ou base de données ici
+// Simulons des données pour l'exemple
+const mockVehicles = [
+  {
+    _id: 'v1',
+    make: 'Renault',
+    model: 'Clio',
+    year: 2022,
+    vehicleType: 'hatchback',
+    images: ['/images/vehicles/renault-clio.jpg'],
+    variants: [
+      { name: 'RS Line' },
+      { name: 'Zen' },
+      { name: 'Intens' },
+      { name: 'Initiale Paris' }
+    ],
+    createdAt: new Date('2023-09-15')
+  },
+  {
+    _id: 'v2',
+    make: 'Peugeot',
+    model: '208',
+    year: 2023,
+    vehicleType: 'hatchback',
+    images: ['/images/vehicles/peugeot-208.jpg'],
+    variants: [
+      { name: 'Active' },
+      { name: 'Allure' },
+      { name: 'GT' }
+    ],
+    createdAt: new Date('2023-10-01')
+  },
+  {
+    _id: 'v3',
+    make: 'Citroën',
+    model: 'C3',
+    year: 2021,
+    vehicleType: 'hatchback',
+    images: ['/images/vehicles/citroen-c3.jpg'],
+    variants: [
+      { name: 'Feel' },
+      { name: 'Shine' },
+      { name: 'You!' },
+      { name: 'C-Series' }
+    ],
+    createdAt: new Date('2023-08-22')
+  },
+  {
+    _id: 'v4',
+    make: 'Volkswagen',
+    model: 'Golf',
+    year: 2022,
+    vehicleType: 'hatchback',
+    images: ['/images/vehicles/vw-golf.jpg'],
+    variants: [
+      { name: 'Life' },
+      { name: 'Style' },
+      { name: 'R-Line' },
+      { name: 'GTI' }
+    ],
+    createdAt: new Date('2023-07-10')
+  },
+  {
+    _id: 'v5',
+    make: 'Toyota',
+    model: 'Yaris',
+    year: 2023,
+    vehicleType: 'hatchback',
+    images: ['/images/vehicles/toyota-yaris.jpg'],
+    variants: [
+      { name: 'France' },
+      { name: 'Dynamic' },
+      { name: 'Design' },
+      { name: 'Collection' }
+    ],
+    createdAt: new Date('2023-11-05')
+  },
+  {
+    _id: 'v6',
+    make: 'Renault',
+    model: 'Megane E-Tech',
+    year: 2023,
+    vehicleType: 'suv',
+    images: ['/images/vehicles/renault-megane-etech.jpg'],
+    variants: [
+      { name: 'Equilibre' },
+      { name: 'Techno' },
+      { name: 'Iconic' }
+    ],
+    createdAt: new Date('2023-11-20')
+  }
+];
+
+// Filtrer les véhicules en fonction de la recherche
+let searchResults = initialQuery 
+  ? mockVehicles.filter(vehicle => 
+      vehicle.make.toLowerCase().includes(initialQuery.toLowerCase()) || 
+      vehicle.model.toLowerCase().includes(initialQuery.toLowerCase()) ||
+      `${vehicle.make} ${vehicle.model}`.toLowerCase().includes(initialQuery.toLowerCase()) ||
+      vehicle.vehicleType.toLowerCase().includes(initialQuery.toLowerCase()) ||
+      vehicle.year.toString().includes(initialQuery))
+  : [];
+
+const hasResults = initialQuery && searchResults.length > 0;
+const noResults = initialQuery && searchResults.length === 0;
+---
+
+<Layout title={initialQuery ? `Recherche: ${initialQuery}` : "Recherche de véhicules"}>
+  <div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+      <h1 class="text-3xl font-bold text-center mb-8">Recherche de véhicules</h1>
+      
+      <!-- Formulaire de recherche -->
+      <div class="mb-10 bg-white rounded-xl shadow-md p-6">
+        <form action="/search" method="get" class="flex flex-col sm:flex-row gap-4">
+          <div class="flex-grow relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <input 
+              type="text" 
+              name="searchQuery" 
+              id="searchQuery" 
+              class="pl-10 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" 
+              placeholder="Rechercher par marque, modèle, type, année..." 
+              value={initialQuery}
+              required
+            />
+          </div>
+          <button 
+            type="submit" 
+            class="sm:w-auto w-full inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 font-medium transition-colors"
+          >
+            Rechercher
+          </button>
+        </form>
+        
+        <!-- Suggestions populaires -->
+        <div class="mt-4">
+          <p class="text-sm text-gray-500 mb-2">Recherches populaires:</p>
+          <div class="flex flex-wrap gap-2">
+            <a href="/search?searchQuery=Renault" class="inline-block bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm px-3 py-1 rounded-full transition-colors">
+              Renault
+            </a>
+            <a href="/search?searchQuery=Peugeot" class="inline-block bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm px-3 py-1 rounded-full transition-colors">
+              Peugeot
+            </a>
+            <a href="/search?searchQuery=SUV" class="inline-block bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm px-3 py-1 rounded-full transition-colors">
+              SUV
+            </a>
+            <a href="/search?searchQuery=2023" class="inline-block bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm px-3 py-1 rounded-full transition-colors">
+              2023
+            </a>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Résultats de recherche -->
+      {initialQuery && (
+        <div class="mb-6">
+          <h2 class="text-xl font-semibold mb-2">
+            {hasResults 
+              ? `Résultats pour "${initialQuery}" (${searchResults.length})`
+              : `Aucun résultat pour "${initialQuery}"`
+            }
+          </h2>
+          
+          {noResults && (
+            <div class="bg-white rounded-xl shadow-sm p-8 text-center">
+              <div class="inline-flex justify-center items-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </div>
+              <p class="text-gray-600 mb-4">Nous n'avons trouvé aucun véhicule correspondant à votre recherche.</p>
+              <p class="text-gray-500 text-sm">
+                Suggestions:
+                <ul class="mt-2 space-y-1">
+                  <li>• Vérifiez l'orthographe des termes de recherche</li>
+                  <li>• Essayez des termes plus généraux</li>
+                  <li>• Essayez un autre terme de recherche</li>
+                </ul>
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+      
+      {hasResults && (
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {searchResults.map(vehicle => (
+            <a href={`/vehicle/${vehicle._id}`} class="group">
+              <div class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                <div class="aspect-w-16 aspect-h-9 bg-gray-100">
+                  <img 
+                    src={vehicle.images?.[0] || '/images/default-vehicle.jpg'} 
+                    alt={`${vehicle.make} ${vehicle.model}`}
+                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+                <div class="p-6">
+                  <div class="flex justify-between items-start mb-2">
+                    <h3 class="text-xl font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
+                      {vehicle.make} {vehicle.model}
+                    </h3>
+                    <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full font-medium">
+                      {vehicle.year}
+                    </span>
+                  </div>
+                  <p class="text-gray-600 mb-4">
+                    Type: {vehicle.vehicleType.charAt(0).toUpperCase() + vehicle.vehicleType.slice(1)}
+                  </p>
+                  {vehicle.variants && vehicle.variants.length > 0 && (
+                    <div class="flex flex-wrap gap-2 mb-4">
+                      {vehicle.variants.map((variant, index) => index < 3 && (
+                        <span class="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full">
+                          {variant.name}
+                        </span>
+                      ))}
+                      {vehicle.variants.length > 3 && (
+                        <span class="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full">
+                          +{vehicle.variants.length - 3} autres
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  <div class="mt-4 flex justify-between items-center">
+                    <span class="text-sm text-gray-500">
+                      {new Date(vehicle.createdAt).toLocaleDateString('fr-FR', {
+                        day: 'numeric',
+                        month: 'long', 
+                        year: 'numeric'
+                      })}
+                    </span>
+                    <span class="text-blue-600 text-sm font-medium group-hover:underline">Voir les détails</span>
+                  </div>
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+      )}
+      
+      {hasResults && (
+        <div class="mt-12 flex justify-center">
+          <a href="/vehicles" class="inline-flex items-center px-6 py-3 border border-transparent rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 font-medium transition-colors">
+            Voir tous les véhicules
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          </a>
+        </div>
+      )}
+      
+      <!-- Véhicules populaires (affichés lorsqu'aucune recherche n'est effectuée) -->
+      {!initialQuery && (
+        <div>
+          <h2 class="text-2xl font-semibold mb-6">Véhicules populaires</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {mockVehicles.slice(0, 6).map(vehicle => (
+              <a href={`/vehicle/${vehicle._id}`} class="group">
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                  <div class="aspect-w-16 aspect-h-9 bg-gray-100">
+                    <img 
+                      src={vehicle.images?.[0] || '/images/default-vehicle.jpg'} 
+                      alt={`${vehicle.make} ${vehicle.model}`}
+                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                  <div class="p-6">
+                    <div class="flex justify-between items-start mb-2">
+                      <h3 class="text-xl font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
+                        {vehicle.make} {vehicle.model}
+                      </h3>
+                      <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full font-medium">
+                        {vehicle.year}
+                      </span>
+                    </div>
+                    <p class="text-gray-600 mb-4">
+                      Type: {vehicle.vehicleType.charAt(0).toUpperCase() + vehicle.vehicleType.slice(1)}
+                    </p>
+                    {vehicle.variants && vehicle.variants.length > 0 && (
+                      <div class="flex flex-wrap gap-2 mb-4">
+                        {vehicle.variants.map((variant, index) => index < 3 && (
+                          <span class="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full">
+                            {variant.name}
+                          </span>
+                        ))}
+                        {vehicle.variants.length > 3 && (
+                          <span class="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full">
+                            +{vehicle.variants.length - 3} autres
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    <div class="mt-4 flex justify-between items-center">
+                      <span class="text-sm text-gray-500">
+                        {new Date(vehicle.createdAt).toLocaleDateString('fr-FR', {
+                          day: 'numeric',
+                          month: 'long', 
+                          year: 'numeric'
+                        })}
+                      </span>
+                      <span class="text-blue-600 text-sm font-medium group-hover:underline">Voir les détails</span>
+                    </div>
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
+          
+          <div class="mt-12 text-center">
+            <a href="/vehicles" class="inline-flex items-center px-6 py-3 border border-transparent rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 font-medium transition-colors">
+              Voir tous les véhicules
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+</Layout>
+
+<style>
+  /* Assure un rapport d'aspect 16:9 pour les images */
+  .aspect-w-16.aspect-h-9 {
+    position: relative;
+    padding-bottom: 56.25%; /* 9/16 = 0.5625 */
+  }
+  
+  .aspect-w-16.aspect-h-9 img {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    object-fit: cover;
+  }
+</style>

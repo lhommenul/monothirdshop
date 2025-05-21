@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { DifficultyLevel, TutorialStatus } from './index';
+import type { DifficultyLevel, TutorialStatus } from './index';
 
 export interface TutorialDuration {
   value: number;

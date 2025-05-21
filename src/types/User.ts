@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { UserRole } from './index';
+import type { UserRole } from './index';
 
 export interface UserBadge {
   name: string;

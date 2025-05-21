@@ -6,7 +6,7 @@ import Layout from '../../layouts/Layout.astro';
 
 // Connexion à MongoDB si ce n'est pas déjà fait ailleurs
 if (!mongoose.connection.readyState) {
-  await mongoose.connect('mongodb+srv://admin:VVFekrlUAsR9N1sm@cluster0.xa3z5.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0');
+  await mongoose.connect(import.meta.env.MONGODB_URI);
 }
 
 const { modelID } = Astro.params;
@@ -34,8 +34,9 @@ const similarVehicles = vehicle ? await VehicleModel.find({
 // Image principale par défaut si aucune n'est disponible
 const mainImage = vehicle?.images?.[0] || '/images/default-vehicle.jpg';
 
+const layoutTitle = vehicle ? `${vehicle.make} ${vehicle.model} ${vehicle.year}` : "Vehicule non trouve";
 ---
-<Layout>
+<Layout  title={layoutTitle}>
   {vehicle ? (
     <div class="bg-gray-50 min-h-screen">
       <!-- Hero section -->
