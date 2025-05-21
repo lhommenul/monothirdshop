@@ -25,66 +25,164 @@ if (pathname.includes('/tools')) {
 
 // Fonction pour déterminer si un lien est actif
 const isActive = (section) => currentSection === section;
+
+// Données pour les éléments de navigation
+const navItems = [
+  {
+    id: 'basic',
+    href: '/tutorial/create',
+    label: 'Informations de base',
+    count: null,
+    activeColor: 'indigo',
+    icon: `<path 
+      stroke-linecap="round" 
+      stroke-linejoin="round" 
+      stroke-width="2"
+      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+    />`
+  },
+  {
+    id: 'tools',
+    href: '/tutorial/create/tools',
+    label: 'Outils',
+    count: 3, // Exemple de compte
+    activeColor: 'green',
+    icon: `<path 
+      stroke-linecap="round" 
+      stroke-linejoin="round" 
+      stroke-width="2"
+      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+      <path 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        stroke-width="2" 
+        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" 
+      />`
+  },
+  {
+    id: 'parts',
+    href: '/tutorial/create/parts',
+    label: 'Pièces',
+    count: 5, // Exemple de compte
+    activeColor: 'orange',
+    icon: `<path 
+      stroke-linecap="round" 
+      stroke-linejoin="round" 
+      stroke-width="2"
+      d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" 
+    />`
+  },
+  {
+    id: 'tags',
+    href: '/tutorial/create/tags',
+    label: 'Tags',
+    count: 8, // Exemple de compte
+    activeColor: 'purple',
+    icon: `<path 
+      stroke-linecap="round" 
+      stroke-linejoin="round" 
+      stroke-width="2"
+      d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" 
+    />`
+  },
+  {
+    id: 'steps',
+    href: '/tutorial/create/steps',
+    label: 'Étapes',
+    count: null,
+    activeColor: 'red',
+    icon: `<path 
+      stroke-linecap="round" 
+      stroke-linejoin="round" 
+      stroke-width="2"
+      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" 
+    />`
+  }
+];
 ---
 
-<!-- Navigation des sections -->
-<nav class="flex flex-col flex-wrap gap-2">
-  <a href="/tutorial/create"
-    class={`inline-flex items-center px-4 py-2 text-sm rounded-full font-medium ${isActive('basic') ? 'bg-indigo-100 border-indigo-300 text-indigo-800' : 'bg-white border border-gray-300'}`}
-    aria-current={isActive('basic') ? 'page' : undefined}>
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
-      stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-    Informations de base
-  </a>
+<div class="p-6 bg-gray-50 rounded-xl shadow-sm">
+  <h2 class="text-lg font-medium text-gray-900 mb-4">Navigation</h2>
+  <nav class="flex flex-col gap-2">
+    {navItems.map((item) => {
+      const active = isActive(item.id);
+      return (
+        <a
+          href={item.href}
+          class:list={[
+            'group relative overflow-hidden transition-all duration-300 ease-in-out',
+            'flex items-center px-4 py-3 text-sm rounded-lg font-medium',
+            active 
+              ? `bg-${item.activeColor}-50 text-${item.activeColor}-700 shadow-sm` 
+              : 'bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900',
+            'border border-transparent',
+            active ? `border-${item.activeColor}-200` : 'hover:border-gray-200'
+          ]}
+          aria-current={active ? 'page' : undefined}
+        >
+          {/* Effet de focus/survol */}
+          <span class:list={[
+            'absolute inset-0 w-1',
+            `bg-${item.activeColor}-500`,
+            'transform transition-all duration-300 ease-out',
+            active ? 'opacity-100' : 'opacity-0 group-hover:opacity-30'
+          ]}></span>
+          
+          {/* Badge de compteur */}
+          {item.count && (
+            <span class:list={[
+              'flex items-center justify-center h-5 min-w-5 px-1 mr-2',
+              'rounded-full text-xs font-semibold',
+              active 
+                ? `bg-${item.activeColor}-100 text-${item.activeColor}-800` 
+                : 'bg-gray-100 text-gray-600 group-hover:bg-gray-200',
+              'transition-colors duration-200'
+            ]}>
+              {item.count}
+            </span>
+          )}
+          
+          {/* Icône */}
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            class:list={[
+              'h-5 w-5 mr-2 transition-transform duration-200 ease-out',
+              active ? `text-${item.activeColor}-600` : 'text-gray-500 group-hover:text-gray-700',
+              active ? 'scale-110' : 'group-hover:scale-105'
+            ]}
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+            set:html={item.icon}
+          />
+          
+          {/* Texte */}
+          <span class="transition-all duration-200">
+            {item.label}
+          </span>
+        </a>
+      );
+    })}
+  </nav>
+</div>
 
-  <a href="/tutorial/create/tools"
-    class={`inline-flex items-center px-4 py-2 text-sm rounded-full font-medium ${isActive('tools') ? 'bg-green-100 border-green-300 text-green-800' : 'bg-white border border-gray-300'}`}
-    aria-current={isActive('tools') ? 'page' : undefined}>
-    {tutorial.requiredTools?.length && <span class="mr-1 font-medium">{tutorial.requiredTools.length}</span>}
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
-      stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-    </svg>
-    Outils
-  </a>
+<script>
+  // Script côté client pour gérer les interactions si nécessaire
+  // Dans un vrai projet Astro, vous pourriez vouloir utiliser des View Transitions
+  // ou implémenter une logique de routage personnalisée
+  
+  document.addEventListener('astro:page-load', () => {
+    // Code qui s'exécute après le chargement de la page
+    const currentPath = window.location.pathname;
+    
+    // Vous pouvez ajouter une logique de navigation client-side ici si nécessaire
+    const navLinks = document.querySelectorAll('nav a');
+    navLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        // Si vous voulez implémenter une navigation côté client sans rechargement de page
+        // Vous pouvez ajouter cette logique ici
+      });
+    });
+  });
+</script>
 
-  <a href="/tutorial/create/parts"
-    class={`inline-flex items-center px-4 py-2 text-sm rounded-full font-medium ${isActive('parts') ? 'bg-orange-100 border-orange-300 text-orange-800' : 'bg-white border border-gray-300'}`}
-    aria-current={isActive('parts') ? 'page' : undefined}>
-    {tutorial.requiredParts?.length && <span class="mr-1 font-medium">{tutorial.requiredParts.length}</span>}
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
-      stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-        d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
-    </svg>
-    Pièces
-  </a>
-
-  <a href="/tutorial/create/tags"
-    class={`inline-flex items-center px-4 py-2 text-sm rounded-full font-medium ${isActive('tags') ? 'bg-purple-100 border-purple-300 text-purple-800' : 'bg-white border border-gray-300'}`}
-    aria-current={isActive('tags') ? 'page' : undefined}>
-    {tutorial.tags?.length && <span class="mr-1 font-medium">{tutorial.tags.length}</span>}
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
-      stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-    </svg>
-    Tags
-  </a>
-
-  <a href="/tutorial/create/steps"
-    class={`inline-flex items-center px-4 py-2 text-sm rounded-full font-medium ${isActive('steps') ? 'bg-red-100 border-red-300 text-red-800' : 'bg-white border border-gray-300'}`}
-    aria-current={isActive('steps') ? 'page' : undefined}>
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
-      stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-    </svg>
-    Étapes
-  </a>
-</nav>
