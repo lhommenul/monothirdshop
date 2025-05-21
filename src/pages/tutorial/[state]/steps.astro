@@ -1,0 +1,17 @@
+---
+import StepForm from '@/components/tutorials/StepForm.vue';
+import Layout from '@/layouts/TutorialLayout.astro';
+
+export async function getStaticPaths() {
+  return [
+    { params: { state: 'create' } }, 
+    { params: { state: 'modify' } },
+  ];
+}
+
+---
+
+<Layout title="Créer un tutoriel">
+  <StepForm client:only />
+</Layout>
+

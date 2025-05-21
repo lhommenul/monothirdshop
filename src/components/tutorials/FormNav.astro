@@ -1,0 +1,90 @@
+---
+interface Props {
+  tutorial: {
+    requiredTools: string[],
+    requiredParts: string[],
+    tags: string[]
+  }
+}
+
+const { tutorial } = Astro.props;
+// On détermine la section active à partir de l'URL actuelle
+const pathname = Astro.url.pathname;
+let currentSection = 'basic';
+
+// Déterminer la section active en fonction du chemin d'URL
+if (pathname.includes('/tools')) {
+  currentSection = 'tools';
+} else if (pathname.includes('/parts')) {
+  currentSection = 'parts';
+} else if (pathname.includes('/tags')) {
+  currentSection = 'tags';
+} else if (pathname.includes('/steps')) {
+  currentSection = 'steps';
+}
+
+// Fonction pour déterminer si un lien est actif
+const isActive = (section) => currentSection === section;
+---
+
+<!-- Navigation des sections -->
+<nav class="flex flex-col flex-wrap gap-2">
+  <a href="/tutorial/create"
+    class={`inline-flex items-center px-4 py-2 text-sm rounded-full font-medium ${isActive('basic') ? 'bg-indigo-100 border-indigo-300 text-indigo-800' : 'bg-white border border-gray-300'}`}
+    aria-current={isActive('basic') ? 'page' : undefined}>
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
+      stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    Informations de base
+  </a>
+
+  <a href="/tutorial/create/tools"
+    class={`inline-flex items-center px-4 py-2 text-sm rounded-full font-medium ${isActive('tools') ? 'bg-green-100 border-green-300 text-green-800' : 'bg-white border border-gray-300'}`}
+    aria-current={isActive('tools') ? 'page' : undefined}>
+    {tutorial.requiredTools?.length && <span class="mr-1 font-medium">{tutorial.requiredTools.length}</span>}
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
+      stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+    Outils
+  </a>
+
+  <a href="/tutorial/create/parts"
+    class={`inline-flex items-center px-4 py-2 text-sm rounded-full font-medium ${isActive('parts') ? 'bg-orange-100 border-orange-300 text-orange-800' : 'bg-white border border-gray-300'}`}
+    aria-current={isActive('parts') ? 'page' : undefined}>
+    {tutorial.requiredParts?.length && <span class="mr-1 font-medium">{tutorial.requiredParts.length}</span>}
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
+      stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
+    </svg>
+    Pièces
+  </a>
+
+  <a href="/tutorial/create/tags"
+    class={`inline-flex items-center px-4 py-2 text-sm rounded-full font-medium ${isActive('tags') ? 'bg-purple-100 border-purple-300 text-purple-800' : 'bg-white border border-gray-300'}`}
+    aria-current={isActive('tags') ? 'page' : undefined}>
+    {tutorial.tags?.length && <span class="mr-1 font-medium">{tutorial.tags.length}</span>}
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
+      stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+    </svg>
+    Tags
+  </a>
+
+  <a href="/tutorial/create/steps"
+    class={`inline-flex items-center px-4 py-2 text-sm rounded-full font-medium ${isActive('steps') ? 'bg-red-100 border-red-300 text-red-800' : 'bg-white border border-gray-300'}`}
+    aria-current={isActive('steps') ? 'page' : undefined}>
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
+      stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+    </svg>
+    Étapes
+  </a>
+</nav>

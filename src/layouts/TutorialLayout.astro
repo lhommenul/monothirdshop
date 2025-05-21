@@ -1,0 +1,23 @@
+---
+import "../styles/global.css";
+import FormNav from "@/components/tutorials/FormNav.astro"
+import Layout from "./Layout.astro"
+
+const { title } = Astro.props
+
+const navProps = {
+  tutorial : {
+    tags :[],
+    requiredParts: [],
+    requiredTools: [],
+  }
+}
+
+---
+
+
+<Layout title={title}>
+  <FormNav tutorial={navProps.tutorial} />
+  <slot>
+</Layout>
+
