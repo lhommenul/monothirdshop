@@ -16,8 +16,12 @@ const navProps = {
 ---
 
 
-<Layout title={title}>
-  <FormNav tutorial={navProps.tutorial} />
-  <slot>
+<Layout title={title} >
+
+  <main class="flex flex-row h-screen w-screen" >
+    <FormNav tutorial={navProps.tutorial} />
+    <slot>
+  </main>
+
 </Layout>
 
